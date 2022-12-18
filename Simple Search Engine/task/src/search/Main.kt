@@ -4,6 +4,7 @@ import java.io.File
 
 class DataBase {
     private val list = mutableListOf<String>()
+    private val indexMap = mutableMapOf<String, MutableList<Int>>()
 
     fun add(line: String) = list.add(line)
 
@@ -24,6 +25,43 @@ class DataBase {
         }
     }
 
+    private fun searchLines(word: String): MutableList<Int> {
+        val listOfIndices = mutableListOf<Int>()
+        loop@for (l in list.indices) {
+            val wordsInLine = list[l].split(" ")
+            for (w in wordsInLine) {
+                if (w == word) {
+                    listOfIndices.add(l)
+                    continue@loop
+                }
+            }
+        }
+        return listOfIndices
+    }
+
+    fun index() {
+        for (line in list) {
+            val wordsInLine = line.split(" ")
+            for (word in wordsInLine) {
+                indexMap[word.lowercase()] = searchLines(word)
+            }
+        }
+    }
+
+    fun indexSearch(word: String) {
+        if (!indexMap.containsKey(word.lowercase())) {
+            println("Nothing.")
+            return
+        }
+        for ((k, v) in indexMap) {
+            if (k == word.lowercase()) {
+                for (i in v) {
+                    println(list[i])
+                }
+            }
+        }
+    }
+
     fun displayList() {
         for (l in list) {
             println(l)
@@ -38,6 +76,12 @@ fun find(dataBase: DataBase) {
     println("\nEnter data to search:")
     val itemSearch = readln()
     dataBase.search(itemSearch)
+}
+
+fun findIndexSearch(dataBase: DataBase) {
+    println("\nEnter data to search:")
+    val itemSearch = readln()
+    dataBase.indexSearch(itemSearch)
 }
 
 /**
@@ -60,6 +104,7 @@ fun searchText(args: Array<String>) {
             for (line in fileLines) {
                 dataBase.add(line)
             }
+            dataBase.index()
         }
     } catch (e: Exception) {
         println("\nFile does not exist.")
@@ -75,7 +120,7 @@ fun searchText(args: Array<String>) {
                 2. Print all people
                 0. Exit""".trimIndent())
             when (readln().toInt()) {
-                1 -> find(dataBase)
+                1 -> findIndexSearch(dataBase)
                 2 -> print(dataBase)
                 0 -> exitCommand = true
                 else -> println("\nIncorrect option! Try again.")
