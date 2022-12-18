@@ -1,5 +1,7 @@
 package search
 
+import java.io.File
+
 class DataBase {
     private val list = mutableListOf<String>()
 
@@ -49,44 +51,42 @@ fun print(dataBase: DataBase) {
 /**
  * Saves text items to database, searches for pieces of text
  */
-fun searchText() {
+fun searchText(args: Array<String>) {
     val dataBase = DataBase()
     try {
         // adding items to database
-        println("Enter the number of items to store:")
-        var n = readln().toInt()
-        if (n !in 1..100) throw Exception()
-        println("Enter all items one at a time:")
-        while (n != 0) {
-            val itemSave = readln()
-            dataBase.add(itemSave)
-            n--
-        }
-        // main menu
-        var exitCommand = false
-        do {
-            try {
-                println()
-                println("""
-                    === Menu ===
-                    1. Find a person
-                    2. Print all people
-                    0. Exit""".trimIndent())
-                when (readln().toInt()) {
-                    1 -> find(dataBase)
-                    2 -> print(dataBase)
-                    0 -> exitCommand = true
-                    else -> println("\nIncorrect option! Try again.")
-                }
-            } catch (e: Exception) {
-                println("\nWrong input.")
+        if (args.size > 1 && args[0] == "--data") {
+            val fileLines = File(args[1]).readLines()
+            for (line in fileLines) {
+                dataBase.add(line)
             }
-        } while (!exitCommand)
+        }
     } catch (e: Exception) {
-        println("\nWrong input.")
+        println("\nFile does not exist.")
     }
+    // main menu
+    var exitCommand = false
+    do {
+        try {
+            println()
+            println("""
+                === Menu ===
+                1. Find a person
+                2. Print all people
+                0. Exit""".trimIndent())
+            when (readln().toInt()) {
+                1 -> find(dataBase)
+                2 -> print(dataBase)
+                0 -> exitCommand = true
+                else -> println("\nIncorrect option! Try again.")
+            }
+        } catch (e: Exception) {
+            println("\nWrong input.")
+        }
+    } while (!exitCommand)
+
 }
 
-fun main() {
-    searchText()
+fun main(args: Array<String>) {
+    searchText(args)
 }
