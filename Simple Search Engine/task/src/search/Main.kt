@@ -8,22 +8,8 @@ class DataBase {
 
     fun add(line: String) = list.add(line)
 
-    fun search(line: String) {
-        val foundList = mutableListOf<String>()
-        for (l in list) {
-            if (""".*${line.lowercase()}.*""".toRegex().matches(l.lowercase())) {
-                foundList.add(l)
-            }
-        }
-        if (foundList.isNotEmpty()) {
-            println("\nFound:")
-            for (l in foundList) {
-                println(l)
-            }
-        } else {
-            println("Nothing.")
-        }
-    }
+    fun getMap() = indexMap
+    fun getList() = list
 
     private fun searchLines(word: String): MutableList<Int> {
         val listOfIndices = mutableListOf<Int>()
@@ -48,20 +34,6 @@ class DataBase {
         }
     }
 
-    fun indexSearch(word: String) {
-        if (!indexMap.containsKey(word.lowercase())) {
-            println("Nothing.")
-            return
-        }
-        for ((k, v) in indexMap) {
-            if (k == word.lowercase()) {
-                for (i in v) {
-                    println(list[i])
-                }
-            }
-        }
-    }
-
     fun displayList() {
         for (l in list) {
             println(l)
@@ -70,18 +42,108 @@ class DataBase {
 }
 
 /**
+ * Searches for all given words in one line
+ */
+fun searchStrategyAll(dataBase: DataBase) {
+    println("\nEnter data to search:")
+    val itemsSearch = readln().split(" ")
+    // building list of index lists for all given words
+    val map = dataBase.getMap()
+    val indexMatrix = mutableListOf<MutableList<Int>>()
+    for (word in itemsSearch) {
+        if (!map.containsKey(word)) {
+            println("Nothing")
+            return
+        } else {
+            indexMatrix.add(map.getValue(word))
+        }
+    }
+    // searching for common elements in all lists of index lists
+    var commonList = indexMatrix[0].toSet()
+    if (indexMatrix.size > 1) {
+        for (i in indexMatrix.indices) {
+            if (i + 1 < indexMatrix.size) {
+                commonList = commonList.intersect(indexMatrix[i + 1].toSet())
+            }
+        }
+    }
+    // displaying the result
+    if (commonList.isNotEmpty()) {
+        for (i in commonList) {
+            println(dataBase.getList()[i])
+        }
+    } else {
+        println("Nothing")
+    }
+}
+
+/**
+ * Searches for all occurrences for any given words
+ */
+fun searchStrategyAny(dataBase: DataBase) {
+    println("\nEnter data to search:")
+    val itemsSearch = readln().split(" ")
+    // building set of words occurrences
+    val setOfIndices = mutableSetOf<Int>()
+    for (word in itemsSearch) {
+        for ((k, v) in dataBase.getMap()) {
+            if (k == word.lowercase()) {
+                for (i in v) {
+                    setOfIndices.add(i)
+                }
+            }
+        }
+    }
+    // displaying the result
+    if (setOfIndices.isNotEmpty()) {
+        for (i in setOfIndices) {
+            println(dataBase.getList()[i])
+        }
+    } else {
+        println("Nothing")
+    }
+}
+
+/**
+ * Searches for all lines that do not contain words from input
+ */
+fun searchStrategyNone(dataBase: DataBase) {
+    println("\nEnter data to skip:")
+    val itemsSearch = readln().split(" ")
+    // building set of words occurrences
+    val setOfIndices = mutableSetOf<Int>()
+    for (word in itemsSearch) {
+        for ((k, v) in dataBase.getMap()) {
+            if (k == word.lowercase()) {
+                for (i in v) {
+                    setOfIndices.add(i)
+                }
+            }
+        }
+    }
+    // displaying the result
+    for (i in dataBase.getList().indices) {
+        if (!setOfIndices.contains(i)) {
+            println(dataBase.getList()[i])
+        }
+    }
+}
+
+/**
  * Searches through the database
  */
 fun find(dataBase: DataBase) {
-    println("\nEnter data to search:")
-    val itemSearch = readln()
-    dataBase.search(itemSearch)
-}
-
-fun findIndexSearch(dataBase: DataBase) {
-    println("\nEnter data to search:")
-    val itemSearch = readln()
-    dataBase.indexSearch(itemSearch)
+    try {
+        println("\nSelect a matching strategy: ALL, ANY, NONE")
+        when (readln().lowercase()) {
+            "all" -> searchStrategyAll(dataBase)
+            "any" -> searchStrategyAny(dataBase)
+            "none" -> searchStrategyNone(dataBase)
+            else -> throw Exception()
+        }
+    } catch (e: Exception) {
+        println("Wrong strategy input.")
+    }
 }
 
 /**
@@ -120,16 +182,15 @@ fun searchText(args: Array<String>) {
                 2. Print all people
                 0. Exit""".trimIndent())
             when (readln().toInt()) {
-                1 -> findIndexSearch(dataBase)
+                1 -> find(dataBase)
                 2 -> print(dataBase)
                 0 -> exitCommand = true
                 else -> println("\nIncorrect option! Try again.")
             }
         } catch (e: Exception) {
-            println("\nWrong input.")
+            println("\nWrong command input.")
         }
     } while (!exitCommand)
-
 }
 
 fun main(args: Array<String>) {
